@@ -15,9 +15,11 @@ const Dashboard = () => {
         fetchTransactions();
     }, []);
 
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/transactions';
+
     const fetchTransactions = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/transactions');
+            const res = await axios.get(API_URL);
             setTransactions(res.data.data);
         } catch (err) {
             console.error(err);
@@ -28,7 +30,7 @@ const Dashboard = () => {
         e.preventDefault();
         if (!text || !amount) return;
         try {
-            const res = await axios.post('http://localhost:5000/api/transactions', { text, amount: +amount, category });
+            const res = await axios.post(API_URL, { text, amount: +amount, category });
             setTransactions([res.data.data, ...transactions]);
             setText(''); setAmount('');
         } catch (err) {
@@ -38,7 +40,7 @@ const Dashboard = () => {
 
     const deleteTransaction = async (id) => {
         try {
-            await axios.delete(`http://localhost:5000/api/transactions/${id}`);
+            await axios.delete(`${API_URL}/${id}`);
             setTransactions(transactions.filter(t => t._id !== id));
         } catch (err) {
             console.error(err);
