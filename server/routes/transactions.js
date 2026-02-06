@@ -1,12 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const Transaction = require('../models/Transaction');
+const { protect } = require('../middleware/auth');
 
 // @desc    Get all transactions
 // @route   GET /api/transactions
-router.get('/', async (req, res) => {
+router.get('/', protect, async (req, res) => {
     try {
-        const transactions = await Transaction.find().sort({ createdAt: -1 });
+        const transactions = await Transaction.find({ user: req.user.id }).sort({ createdAt: -1 });
         return res.status(200).json({
             success: true,
             count: transactions.length,
@@ -22,10 +23,9 @@ router.get('/', async (req, res) => {
 
 // @desc    Add transaction
 // @route   POST /api/transactions
-router.post('/', async (req, res) => {
+router.post('/', protect, async (req, res) => {
     try {
-        const { text, amount, category } = req.body;
-
+        req.body.user = req.user.id;
         const transaction = await Transaction.create(req.body);
 
         return res.status(201).json({
@@ -50,9 +50,9 @@ router.post('/', async (req, res) => {
 
 // @desc    Delete transaction
 // @route   DELETE /api/transactions/:id
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', protect, async (req, res) => {
     try {
-        const transaction = await Transaction.findByIdAndDelete(req.params.id);
+        const transaction = await Transaction.findById(req.params.id);
 
         if (!transaction) {
             return res.status(404).json({
@@ -60,6 +60,16 @@ router.delete('/:id', async (req, res) => {
                 error: 'No transaction found',
             });
         }
+
+        // Make sure user owns transaction
+        if (transaction.user.toString() !== req.user.id) {
+            return res.status(401).json({
+                success: false,
+                error: 'Not authorized to delete this transaction',
+            });
+        }
+
+        await transaction.deleteOne();
 
         return res.status(200).json({
             success: true,
