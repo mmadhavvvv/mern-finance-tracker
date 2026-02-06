@@ -34,7 +34,11 @@ export const AuthProvider = ({ children }) => {
             setUser(userData);
             return true;
         } catch (err) {
-            setError(err.response?.data?.error || 'Login failed');
+            if (err.code === 'ERR_NETWORK') {
+                setError('Server is waking up (Render Free Tier). Please wait 30 seconds and try again.');
+            } else {
+                setError(err.response?.data?.error || 'Login failed - please check your credentials');
+            }
             return false;
         }
     };
@@ -52,7 +56,11 @@ export const AuthProvider = ({ children }) => {
             setUser(userData);
             return true;
         } catch (err) {
-            setError(err.response?.data?.error || 'Registration failed');
+            if (err.code === 'ERR_NETWORK') {
+                setError('Server is waking up (Render Free Tier). Please wait 30 seconds and try again.');
+            } else {
+                setError(err.response?.data?.error || 'Registration failed - email might already exist');
+            }
             return false;
         }
     };
